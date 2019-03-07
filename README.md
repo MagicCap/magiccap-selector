@@ -1,0 +1,1 @@
+magiccap-selector
