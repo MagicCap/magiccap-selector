@@ -36,7 +36,11 @@ document.body.onmousedown = async e => {
 // Called when a event is recieved from another screen.
 ipcRenderer.on(`${displayInfo.uuid}-event-recv`, (_, res) => {
     switch (res.type) {
-        // TODO: Add events.
+        case "invalidate-selections": {
+            element.style.width = "0px";
+            element.style.height = "0px";
+            break;
+        }
     }
 });
 
@@ -65,6 +69,10 @@ const getInbetweenWindows = electronMouse => {
 // Called when the mouse moves.
 document.body.onmousemove = e => {
     thisClick = require("electron").screen.getCursorScreenPoint();
+    ipcRenderer.send(`${displayInfo.uuid}-event-send`, {
+        type: "invalidate-selections",
+    });
+    
     if (firstClick) {
         element.style.width = `${Math.abs(e.pageX - firstClick.pageX)}px`;
         element.style.height = `${Math.abs(e.pageY - firstClick.pageY)}px`;
@@ -80,8 +88,8 @@ document.body.onmousemove = e => {
         const screenPart = inThese[0];
         element.style.width = `${screenPart.width}px`;
         element.style.height = `${screenPart.height}px`;
-        element.style.left = `${screenPart.x}px`;
-        element.style.top = `${screenPart.y}px`;
+        element.style.left = `${screenPart.x - displayInfo.bounds.x}px`;
+        element.style.top = `${screenPart.y - displayInfo.bounds.y}px`;
     }
 }
 

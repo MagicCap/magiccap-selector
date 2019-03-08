@@ -126,6 +126,7 @@ module.exports = async buttons => {
                 buttons: buttons,
                 displayNumber: screenNumber,
                 uuid: uuid,
+                bounds: displays[screenNumber].bounds,
                 activeWindows: activeWindows,
             };
         });
