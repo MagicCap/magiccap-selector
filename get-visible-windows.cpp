@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#ifdef __WIN32
+#ifdef _WIN32
 #include <Windows.h>
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM _)
 {
@@ -11,7 +11,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM _)
     {
         RECT WindowRect;
         GetWindowRect(hwnd, &WindowRect);
-        printf("%lu %lu %lu %lu\n", WindowRect.left, WindowRect.top, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top);
+        printf("%i %i %i %i\n", (int)WindowRect.left, (int)WindowRect.top, (int)WindowRect.right - (int)WindowRect.left, (int)WindowRect.bottom - (int)WindowRect.top);
     }
     return true;
 }
