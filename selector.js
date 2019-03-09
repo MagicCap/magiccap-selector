@@ -169,7 +169,7 @@ document.body.onmouseup = async e => {
     final.pageY = e.pageY;
     let start = firstClick;
     let end = final;
-    if (start.x > end.x) {
+    if (start.x > end.x || start.y > end.y) {
         end = start;
         start = final;
     }
