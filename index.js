@@ -2,8 +2,8 @@
 // Copyright (C) Jake Gealer <jake@gealer.email> 2019.
 // Copyright (C) Rhys O'Kane <SunburntRock89@gmail.com> 2019.
 
-// Defines the main IPC.
-const { ipcMain, BrowserWindow, Rectangle } = require("electron");
+// Defines the required imports.
+const { ipcMain, BrowserWindow } = require("electron");
 const uuidv4 = require('uuid/v4');
 const os = require("os");
 const path = require("path");
@@ -175,6 +175,7 @@ module.exports = async buttons => {
                     display: args.display,
                     screenshots: screenshots,
                     activeWindows: activeWindows,
+                    selections: args.selections,
                 })
             }
         })
