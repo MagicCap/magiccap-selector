@@ -135,6 +135,7 @@ document.body.onmouseup = async e => {
 
     let final = require("electron").screen.getCursorScreenPoint();
 
+    let width, height;
     if (e.pageX === firstClick.pageX) {
         firstClick = null;
         const inThese = getInbetweenWindows(thisClick);
@@ -157,6 +158,9 @@ document.body.onmouseup = async e => {
             y: screenPart.y + screenPart.height,
         }
 
+        width = screenPart.width;
+        height = screenPart.height;
+
         final.pageX = final.x - displayInfo.bounds.x;
         final.pageY = final.y - displayInfo.bounds.y;
     }
@@ -170,6 +174,11 @@ document.body.onmouseup = async e => {
         start = final;
     }
     
+    if (!width) {
+        width = end.x - start.x;
+        height = end.y - start.y;
+    }
+
     if (selectionType === "__cap__") {
         await ipcRenderer.send("screen-close", {
             startX: start.x,
@@ -182,6 +191,8 @@ document.body.onmouseup = async e => {
             endPageY: end.pageY,
             display: screenNumber,
             selections: selections,
+            width: width,
+            height: height,
         });
     } else {
         const selection = {

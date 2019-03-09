@@ -176,6 +176,8 @@ module.exports = async buttons => {
                     screenshots: screenshots,
                     activeWindows: activeWindows,
                     selections: args.selections,
+                    width: args.width,
+                    height: args.height,
                 })
             }
         })
