@@ -153,7 +153,7 @@ module.exports = async buttons => {
             }
             selectorActive = false;
             for (screen of screens) {
-                await screen.hide();
+                await screen.setSize(0, 0);
                 await screen.close();
             }
             if (args === undefined) {
