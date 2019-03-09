@@ -148,16 +148,17 @@ document.body.onmouseup = async e => {
         firstClick = {
             x: screenPart.x,
             y: screenPart.y,
-            pageX: element.clientLeft,
-            pageY: element.clientTop,
+            pageX: screenPart.x - displayInfo.bounds.x,
+            pageY: screenPart.y - displayInfo.bounds.y,
         }
 
         final = {
             x: screenPart.x + screenPart.width,
             y: screenPart.y + screenPart.height,
-            pageX: element.clientLeft + element.clientWidth,
-            pageY: element.clientTop + element.clientHeight,
         }
+
+        final.pageX = final.x - displayInfo.bounds.x;
+        final.pageY = final.y - displayInfo.bounds.y;
     }
 
     final.pageX = e.pageX;
