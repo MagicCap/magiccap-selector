@@ -154,6 +154,7 @@ module.exports = async buttons => {
             selectorActive = false;
             for (screen of screens) {
                 await screen.setSize(0, 0);
+                await screen.setFullScreen(false);
                 await screen.close();
             }
             if (args === undefined) {
