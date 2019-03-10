@@ -83,7 +83,7 @@ module.exports = async buttons => {
     if (os.platform() === "darwin") {
         const { stdout } = await asyncChildProcess.execAsync(`"${__dirname}${path.sep}bin${path.sep}get-visible-windows-darwin"`);
         const windowsSplit = stdout.trim().split("\n");
-        for (window of windowsSplit) {
+        for (const window of windowsSplit) {
             const intRectangleParts = [];
             for (textRectangle of window.split(" ")) {
                 intRectangleParts.push(parseInt(textRectangle));
