@@ -163,20 +163,27 @@ document.body.onmouseup = async e => {
 
         final.pageX = final.x - displayInfo.bounds.x;
         final.pageY = final.y - displayInfo.bounds.y;
+    } else {
+        firstClick.pageX = parseInt(element.style.left, 10);
+        firstClick.pageY = parseInt(element.style.top, 10);
+        final.pageX = parseInt(element.style.right, 10);
+        final.pageY = parseInt(element.style.bottom, 10);
     }
 
-    final.pageX = e.pageX;
-    final.pageY = e.pageY;
-    let start = firstClick;
-    let end = final;
-    if (start.x > end.x || start.y > end.y) {
-        end = start;
-        start = final;
-    }
-    
+    const start = firstClick;
+    const end = final;
+
     if (!width) {
         width = end.x - start.x;
         height = end.y - start.y;
+    }
+
+    if (0 > width) {
+        width *= -1;
+    }
+
+    if (0 > height) {
+        height *= -1;
     }
 
     if (selectionType === "__cap__") {
