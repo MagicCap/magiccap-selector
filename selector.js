@@ -145,8 +145,8 @@ document.body.onmouseup = async e => {
 
     firstClick = {};
 
-    firstClick.pageX = parseInt(element.style.left, 10);
-    firstClick.pageY = parseInt(element.style.top, 10);
+    firstClick.pageX = parseInt(window.pageXOffset + element.style.left, 10);
+    firstClick.pageY = parseInt(window.pageYOffset + element.style.top, 10);
     firstClick.x = firstClick.pageX + displayInfo.bounds.x;
     firstClick.y = firstClick.pageY + displayInfo.bounds.y;
     width = parseInt(element.style.width, 10);
