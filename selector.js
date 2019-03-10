@@ -133,58 +133,33 @@ document.body.onmouseup = async e => {
         return;
     }
 
-    let final = require("electron").screen.getCursorScreenPoint();
 
-    let width, height;
+    let width, height, inThese;
     if (e.pageX === firstClick.pageX) {
-        firstClick = null;
-        const inThese = getInbetweenWindows(thisClick);
+        inThese = getInbetweenWindows(thisClick);
 
         if (inThese.length === 0) {
             return;
         }
-
-        const screenPart = inThese[0];
-
-        firstClick = {
-            x: screenPart.x,
-            y: screenPart.y,
-            pageX: screenPart.x - displayInfo.bounds.x,
-            pageY: screenPart.y - displayInfo.bounds.y,
-        }
-
-        final = {
-            x: screenPart.x + screenPart.width,
-            y: screenPart.y + screenPart.height,
-        }
-
-        width = screenPart.width;
-        height = screenPart.height;
-
-        final.pageX = final.x - displayInfo.bounds.x;
-        final.pageY = final.y - displayInfo.bounds.y;
-    } else {
-        firstClick.pageX = parseInt(element.style.left, 10);
-        firstClick.pageY = parseInt(element.style.top, 10);
-        final.pageX = parseInt(element.style.right, 10);
-        final.pageY = parseInt(element.style.bottom, 10);
     }
+
+    firstClick = {};
+
+    firstClick.pageX = parseInt(element.style.left, 10);
+    firstClick.pageY = parseInt(element.style.top, 10);
+    firstClick.x = firstClick.pageX + displayInfo.bounds.x;
+    firstClick.y = firstClick.pageY + displayInfo.bounds.y;
+    width = parseInt(element.style.width, 10);
+    height = parseInt(element.style.height, 10);
+    let final = {
+        pageX: firstClick.pageX + width,
+        pageY: firstClick.pageY + height,
+    };
+    final.x = final.pageX + displayInfo.bounds.x;
+    final.y = final.pageY + displayInfo.bounds.y;
 
     const start = firstClick;
     const end = final;
-
-    if (!width) {
-        width = end.x - start.x;
-        height = end.y - start.y;
-    }
-
-    if (0 > width) {
-        width *= -1;
-    }
-
-    if (0 > height) {
-        height *= -1;
-    }
 
     if (selectionType === "__cap__") {
         await ipcRenderer.send("screen-close", {
