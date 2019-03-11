@@ -108,9 +108,8 @@ document.body.onmouseup = async e => {
         return;
     }
 
-
-    let width, height, inThese;
-    if (e.pageX === firstClick.pageX) {
+    let inThese, start, end;
+    if (e.clientX === firstClick.pageX) {
         inThese = getInbetweenWindows(thisClick);
 
         if (inThese.length === 0) {
@@ -118,23 +117,24 @@ document.body.onmouseup = async e => {
         }
     }
 
-    firstClick = {};
+    const posInfo = element.getBoundingClientRect();
 
-    firstClick.pageX = parseInt(window.pageXOffset + element.style.left, 10);
-    firstClick.pageY = parseInt(window.pageYOffset + element.style.top, 10);
-    firstClick.x = firstClick.pageX + displayInfo.bounds.x;
-    firstClick.y = firstClick.pageY + displayInfo.bounds.y;
-    width = parseInt(element.style.width, 10);
-    height = parseInt(element.style.height, 10);
-    let final = {
-        pageX: firstClick.pageX + width,
-        pageY: firstClick.pageY + height,
+    const width = posInfo.width;
+    const height = posInfo.height;
+
+    start = {
+        pageX: posInfo.x,
+        pageY: posInfo.y,
     };
-    final.x = final.pageX + displayInfo.bounds.x;
-    final.y = final.pageY + displayInfo.bounds.y;
+    start.x = start.pageX + displayInfo.bounds.x;
+    start.y = start.pageY + displayInfo.bounds.y;
 
-    const start = firstClick;
-    const end = final;
+    end = {
+        x: start.x + width,
+        y: start.y + height,
+        pageY: start.pageY + height,
+        pageX: start.pageX + width,
+    };
 
     if (selectionType === "__cap__") {
         await ipcRenderer.send("screen-close", {
