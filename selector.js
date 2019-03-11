@@ -7,8 +7,8 @@ const { ipcRenderer } = require("electron");
 // Gets the display number.
 const screenNumber = Number(window.location.hash.substr(1));
 
-// Gets information about this display.
-const displayInfo = ipcRenderer.sendSync(`screen-${screenNumber}-load`);
+// Where display information will be defined.
+let displayInfo;
 
 // Defines the selection type.
 let selectionType = "__cap__";
@@ -26,9 +26,6 @@ document.addEventListener("keydown", async event => {
     }
 });
 
-// Sets the background to the screenshot taken before.
-document.body.style.backgroundImage = `url("file://${__dirname}/dimmer.png"), url("data:image/png;base64,${displayInfo.screenshot.toString("base64")}")`
-
 // Defines the position of the first click.
 let firstClick = null;
 
@@ -45,28 +42,6 @@ document.body.onmousedown = async e => {
     firstClick.pageX = e.pageX;
     firstClick.pageY = e.pageY;
 }
-
-// Called when a event is recieved from another screen.
-ipcRenderer.on(`${displayInfo.uuid}-event-recv`, (_, res) => {
-    switch (res.type) {
-        case "invalidate-selections": {
-            element.style.width = "0px";
-            element.style.height = "0px";
-            break;
-        }
-        case "selection-type-change": {
-            selectionType = res.args.selectionType;
-            break;
-        }
-        case "selection-made": {
-            if (selections[res.args.selectionType]) {
-                selections[res.args.selectionType].push(res.args);
-            } else {
-                selections[res.args.selectionType] = [res.args];
-            }
-        }
-    }
-});
 
 // Checks if a number is between other numbers. NUMBERRRRRRS!
 function between(x, min, max) {
@@ -219,18 +194,6 @@ document.body.onmouseup = async e => {
 // Defines the uploader properties HTML element.
 const uploaderProperties = document.getElementById("UploaderProperties");
 
-// Handles displays the buttons.
-if (displayInfo.buttons && displayInfo.mainDisplay) {
-    for (const buttonId in displayInfo.buttons) {
-        const button = displayInfo.buttons[buttonId];
-        uploaderProperties.innerHTML += `
-            <a href="javascript:invokeButton(${buttonId})" style="cursor: default;">
-                <img class="clickable-property${button.active ? " selected" : ""}" src="file://${button.imageLocation}">
-            </a>
-        `;
-    }
-}
-
 // This is called when a button is invoked.
 function invokeButton(buttonId) {
     const newNodes = [];
@@ -262,5 +225,45 @@ function invokeButton(buttonId) {
             });
             break;
         }
+    }
+}
+
+// Sets the display information.
+displayInfo = ipcRenderer.sendSync(`screen-${screenNumber}-load`);
+
+// Sets the background image.
+document.body.style.backgroundImage = `url("file://${__dirname}/dimmer.png"), url("data:image/png;base64,${displayInfo.screenshot.toString("base64")}")`;
+
+// Called when a event is recieved from another screen.
+ipcRenderer.on(`${displayInfo.uuid}-event-recv`, (_, res) => {
+    switch (res.type) {
+        case "invalidate-selections": {
+            element.style.width = "0px";
+            element.style.height = "0px";
+            break;
+        }
+        case "selection-type-change": {
+            selectionType = res.args.selectionType;
+            break;
+        }
+        case "selection-made": {
+            if (selections[res.args.selectionType]) {
+                selections[res.args.selectionType].push(res.args);
+            } else {
+                selections[res.args.selectionType] = [res.args];
+            }
+        }
+    }
+});
+
+// Handles displaying the buttons.
+if (displayInfo.buttons && displayInfo.mainDisplay) {
+    for (const buttonId in displayInfo.buttons) {
+        const button = displayInfo.buttons[buttonId];
+        uploaderProperties.innerHTML += `
+            <a href="javascript:invokeButton(${buttonId})" style="cursor: default;">
+                <img class="clickable-property${button.active ? " selected" : ""}" src="file://${button.imageLocation}">
+            </a>
+        `;
     }
 }

@@ -3,7 +3,7 @@
 // Copyright (C) Rhys O'Kane <SunburntRock89@gmail.com> 2019.
 
 // Defines the required imports.
-const { ipcMain, BrowserWindow } = require("electron");
+const { ipcMain, BrowserWindow, app } = require("electron");
 const uuidv4 = require('uuid/v4');
 const os = require("os");
 const path = require("path");
@@ -27,15 +27,36 @@ const spawnWindows = displays => {
             alwaysOnTop: true,
             show: false,
         })
-        win.once("ready-to-show", () => {
-            win.show();
-        })
         win.setPosition(i.bounds.x, i.bounds.y)
         win.setMovable(false)
         windows.push(win)
     }
     return windows;
 };
+
+// Gets the displays in order.
+const getOrderedDisplays = () => {
+    const electronScreen = require("electron").screen;
+    return electronScreen.getAllDisplays().sort((a, b) => {
+        let sub = a.bounds.x - b.bounds.x;
+        if (sub === 0) {
+            if (a.bounds.y > b.bounds.y) {
+                sub -= 1;
+            } else {
+                sub += 1;
+            }
+        }
+        return sub;
+    });
+};
+
+// Defines all of the spawned windows.
+let spawnedWindows;
+const appPrep = () => {
+    const displays = getOrderedDisplays();
+    spawnedWindows = spawnWindows(displays);
+};
+app.on("ready", appPrep);
 
 // Gets the values of a object.
 const values = item => {
@@ -57,17 +78,7 @@ module.exports = async buttons => {
 
     const electronScreen = require("electron").screen;
 
-    const displays = electronScreen.getAllDisplays().sort((a, b) => {
-        let sub = a.bounds.x - b.bounds.x;
-        if (sub === 0) {
-            if (a.bounds.y > b.bounds.y) {
-                sub -= 1;
-            } else {
-                sub += 1;
-            }
-        }
-        return sub;
-    });
+    const displays = getOrderedDisplays();
 
     let primaryId = 0;
     const x = electronScreen.getPrimaryDisplay().id;
@@ -111,7 +122,12 @@ module.exports = async buttons => {
 
     let screenshots = await Promise.all(promises);
 
-    const screens = spawnWindows(displays);
+    let screens;
+    if (!spawnedWindows) {
+        screens = spawnWindows(displays);
+    } else {
+        screens = spawnedWindows;
+    }
 
     const uuidDisplayMap = {};
     for (const screenNumber in screens) {
@@ -119,7 +135,7 @@ module.exports = async buttons => {
         screen.loadURL(`file://${__dirname}/selector.html#${screenNumber}`);
         const uuid = uuidv4();
         uuidDisplayMap[screenNumber] = uuid;
-        ipcMain.once(`screen-${screenNumber}-load`, event => {
+        await ipcMain.once(`screen-${screenNumber}-load`, event => {
             event.returnValue = {
                 mainDisplay: screenNumber == primaryId,
                 screenshot: screenshots[screenNumber],
@@ -130,6 +146,7 @@ module.exports = async buttons => {
                 activeWindows: activeWindows,
             };
         });
+        await screen.show();
         ipcMain.on(`${uuid}-event-send`, (_, args) => {
             for (const otherUuid of values(uuidDisplayMap)) {
                 if (otherUuid !== uuid) {
@@ -145,7 +162,7 @@ module.exports = async buttons => {
         });
     }
     selectorActive = true;
-    return await new Promise(res => {
+    const r = await new Promise(res => {
         ipcMain.once("screen-close", async(_, args) => {
             for (const uuid of values(uuidDisplayMap)) {
                 await ipcMain.removeAllListeners(`${uuid}-event-send`);
@@ -183,4 +200,6 @@ module.exports = async buttons => {
             }
         })
     });
+    appPrep();
+    return r;
 };
