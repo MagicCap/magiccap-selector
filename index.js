@@ -53,8 +53,10 @@ const getOrderedDisplays = () => {
 // Defines all of the spawned windows.
 let spawnedWindows;
 const appPrep = () => {
-    const displays = getOrderedDisplays();
-    spawnedWindows = spawnWindows(displays);
+    if (platform !== "linux") {
+        const displays = getOrderedDisplays();
+        spawnedWindows = spawnWindows(displays);
+    }
 };
 app.on("ready", appPrep);
 
