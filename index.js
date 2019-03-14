@@ -24,9 +24,10 @@ const spawnWindows = displays => {
             frame: false,
             simpleFullscreen: true,
             fullscreen: true,
-            alwaysOnTop: true,
             show: false,
         })
+        win.setAlwaysOnTop(true, "floating")
+        win.setVisibleOnAllWorkspaces(true)
         win.setPosition(i.bounds.x, i.bounds.y)
         win.setMovable(false)
         windows.push(win)
