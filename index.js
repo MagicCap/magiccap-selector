@@ -55,8 +55,14 @@ const getOrderedDisplays = () => {
 let spawnedWindows;
 const appPrep = () => {
     if (platform !== "linux") {
-        const displays = getOrderedDisplays();
-        spawnedWindows = spawnWindows(displays);
+        const spawnEm = () => {
+            const displays = getOrderedDisplays();
+            spawnedWindows = spawnWindows(displays);
+        };
+        spawnEm();
+        const electronScreen = require("electron").screen;
+        electronScreen.on("display-added", spawnEm);
+        electronScreen.on("display-removed", spawnEm);
     }
 };
 app.on("ready", appPrep);
