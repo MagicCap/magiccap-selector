@@ -1,6 +1,6 @@
 {
   "name": "magiccap-selector",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "The region selection functionality for MagicCap.",
   "main": "index.js",
   "scripts": {

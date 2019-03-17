@@ -22,10 +22,10 @@ const spawnWindows = displays => {
     for (let i of displays) {
         let win = new BrowserWindow({
             frame: false,
-            simpleFullscreen: true,
-            fullscreen: true,
             alwaysOnTop: true,
             show: false,
+            width: 1,
+            height: 1,
         })
         win.setVisibleOnAllWorkspaces(true)
         win.setPosition(i.bounds.x, i.bounds.y)
@@ -155,7 +155,8 @@ module.exports = async buttons => {
                 activeWindows: activeWindows,
             };
         });
-        await screen.show();
+        screen.show()
+        setTimeout(() => { screen.setFullScreen(true) }, 200);
         ipcMain.on(`${uuid}-event-send`, (_, args) => {
             for (const otherUuid of values(uuidDisplayMap)) {
                 if (otherUuid !== uuid) {
@@ -179,8 +180,8 @@ module.exports = async buttons => {
             }
             selectorActive = false;
             for (screen of screens) {
-                await screen.setSize(0, 0);
                 await screen.setFullScreen(false);
+                await screen.setSize(0, 0);
                 await screen.close();
             }
             if (args === undefined) {
