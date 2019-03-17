@@ -24,7 +24,7 @@ const spawnWindows = displays => {
             frame: false,
             simpleFullscreen: true,
             fullscreen: true,
-            setAlwaysOnTop: true,
+            alwaysOnTop: true,
             show: false,
         })
         win.setVisibleOnAllWorkspaces(true)
