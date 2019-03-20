@@ -24,8 +24,8 @@ const spawnWindows = displays => {
             frame: false,
             alwaysOnTop: true,
             show: false,
-            width: 1,
-            height: 1,
+            width: i.bounds.width,
+            height: i.bounds.height,
         })
         win.setVisibleOnAllWorkspaces(true)
         win.setPosition(i.bounds.x, i.bounds.y)
@@ -155,8 +155,10 @@ module.exports = async buttons => {
                 activeWindows: activeWindows,
             };
         });
-        screen.show()
-        setTimeout(() => { screen.setFullScreen(true) }, 200);
+        setTimeout(() => {
+            screen.show(); 
+            screen.setFullScreen(true);
+        }, 150);
         ipcMain.on(`${uuid}-event-send`, (_, args) => {
             for (const otherUuid of values(uuidDisplayMap)) {
                 if (otherUuid !== uuid) {
