@@ -23,17 +23,27 @@ int main()
 }
 #elif __APPLE__
 #include <ApplicationServices/ApplicationServices.h>
+#include <string.h>
 int main()
 {
-    CFArrayRef WindowList = CGWindowListCopyWindowInfo(kCGWindowListExcludeDesktopElements | kCGWindowListOptionOnScreenOnly | kCGWindowListOptionOnScreenAboveWindow, kCGNullWindowID);
+    CFArrayRef WindowList = CGWindowListCopyWindowInfo(kCGWindowListExcludeDesktopElements | kCGWindowListOptionOnScreenAboveWindow, kCGNullWindowID);
     int ArrLength = CFArrayGetCount(WindowList);
-    for(int i = 0; i < ArrLength; ++i) {
+    for (int i = 0; i < ArrLength; ++i) {
         CFDictionaryRef ProcessRef = (CFDictionaryRef)CFArrayGetValueAtIndex(WindowList, i);
 
-        CGRect ItemBounds;
-        CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)CFDictionaryGetValue(ProcessRef, kCGWindowBounds), &ItemBounds);
+        const char *WindowName = CFStringGetCStringPtr((CFStringRef)CFDictionaryGetValue(ProcessRef, kCGWindowName), kCFStringEncodingUTF8);
+        if (WindowName != NULL && strcmp(WindowName, "Dock") == 0) {
+            continue;
+        }
 
-        printf("%i %i %i %i\n", (int)ItemBounds.origin.x, (int)ItemBounds.origin.y, (int)ItemBounds.size.width, (int)ItemBounds.size.height);
+        CFBooleanRef WindowBool = reinterpret_cast<CFBooleanRef>(CFDictionaryGetValue(ProcessRef, kCGWindowIsOnscreen));
+
+        if (WindowBool != NULL && CFBooleanGetValue(WindowBool) == true) {
+            CGRect ItemBounds;
+            CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)CFDictionaryGetValue(ProcessRef, kCGWindowBounds), &ItemBounds);
+
+            printf("%i %i %i %i\n", (int)ItemBounds.origin.x, (int)ItemBounds.origin.y, (int)ItemBounds.size.width, (int)ItemBounds.size.height);
+        }
     }
     return 0;
 }
