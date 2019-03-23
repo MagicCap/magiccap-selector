@@ -181,7 +181,9 @@ module.exports = async buttons => {
                 await ipcMain.removeAllListeners(`${uuid}-event-recv`);
             }
             selectorActive = false;
-            for (screen of screens) {
+            const these = screens;
+            screens = [];
+            for (screen of these) {
                 await screen.setFullScreen(false);
                 await screen.setSize(0, 0);
                 await screen.close();
