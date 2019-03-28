@@ -8,6 +8,9 @@ const uuidv4 = require('uuid/v4');
 const os = require("os");
 const path = require("path");
 const asyncChildProcess = require("async-child-process");
+const b64 = require("base64-async");
+const { spawn } = require("child_process");
+const { get } = require("chainfetch");
 
 // Defines the platform.
 const platform = os.platform();
@@ -15,6 +18,17 @@ let fullPlatform = platform;
 if (platform === "win32") {
     fullPlatform += ".exe";
 }
+
+// Defines the HTTP server.
+const screenshotServer = spawn(`${__dirname}${path.sep}bin${path.sep}screenshot-display-${fullPlatform}`, {
+    detached: false,
+});
+let screenshotServerKey;
+screenshotServer.stdout.on("data", key => {
+    if (!screenshotServerKey) {
+        screenshotServerKey = key;
+    }
+})
 
 // Spawns all browser windows.
 const spawnWindows = displays => {
@@ -79,6 +93,15 @@ const values = item => {
 // Defines if the selector is active.
 let selectorActive = false;
 
+// Decodes all of the base 64.
+const decodeB64 = async shotList => {
+    const promises = [];
+    for (const shot of shotList) {
+        promises.push(b64.decode(shot));
+    }
+    return Promise.all(promises);
+};
+
 // Opens the region selector.
 module.exports = async buttons => {
     if (selectorActive) {
@@ -118,16 +141,20 @@ module.exports = async buttons => {
     }
 
     const displayPromise = async display => {
-        const { stdout } = await asyncChildProcess.execAsync(`"${__dirname}${path.sep}bin${path.sep}screenshot-display-${fullPlatform}" ${display}`, {
-            maxBuffer: 999999999,
-        });
-        return new Buffer.from(stdout, "base64");
+        const data = await get(`http://127.0.0.1:63431/?key=${screenshotServerKey}&display=${display}`).toBuffer();
+        return b64.encode(data.body);
     }
 
     const promises = [];
-    for (const displayId in displays) {
-        promises.push(displayPromise(displayId));
-    }
+
+    // Shoves everything in the background.
+    (() => {
+        for (const displayId in displays) {
+            const promise = displayPromise(displayId);
+            promise;
+            promises.push(promise);
+        }
+    })();
 
     let screenshots = await Promise.all(promises);
 
@@ -144,8 +171,8 @@ module.exports = async buttons => {
         screen.loadURL(`file://${__dirname}/selector.html#${screenNumber}`);
         const uuid = uuidv4();
         uuidDisplayMap[screenNumber] = uuid;
-        await ipcMain.once(`screen-${screenNumber}-load`, event => {
-            event.returnValue = {
+        await ipcMain.once(`screen-${screenNumber}-load`, async() => {
+            await screen.webContents.send("load-reply", {
                 mainDisplay: screenNumber == primaryId,
                 screenshot: screenshots[screenNumber],
                 buttons: buttons,
@@ -153,23 +180,19 @@ module.exports = async buttons => {
                 uuid: uuid,
                 bounds: displays[screenNumber].bounds,
                 activeWindows: activeWindows,
-            };
+            });
         });
         setTimeout(() => {
-            screen.show(); 
+            screen.show();
             screen.setFullScreen(true);
         }, 150);
         ipcMain.on(`${uuid}-event-send`, (_, args) => {
-            for (const otherUuid of values(uuidDisplayMap)) {
-                if (otherUuid !== uuid) {
-                    for (const browser of screens) {
-                        browser.webContents.send(`${otherUuid}-event-recv`, {
-                            type: args.type,
-                            display: screenNumber,
-                            args: args.args,
-                        });
-                    }
-                }
+            for (const browser of screens) {
+                browser.webContents.send("event-recv", {
+                    type: args.type,
+                    display: screenNumber,
+                    args: args.args,
+                });
             }
         });
     }
@@ -178,16 +201,17 @@ module.exports = async buttons => {
         ipcMain.once("screen-close", async(_, args) => {
             for (const uuid of values(uuidDisplayMap)) {
                 await ipcMain.removeAllListeners(`${uuid}-event-send`);
-                await ipcMain.removeAllListeners(`${uuid}-event-recv`);
             }
+            await ipcMain.removeAllListeners("event-recv");
             selectorActive = false;
             const these = screens;
-            screens = [];
-            for (screen of these) {
+            for (const screen of these) {
                 await screen.setFullScreen(false);
+                await screen.setSimpleFullScreen(false);
                 await screen.setSize(0, 0);
                 await screen.close();
             }
+            screens = [];
             if (args === undefined) {
                 res(null);
             } else {
@@ -205,7 +229,7 @@ module.exports = async buttons => {
                         pageY: args.endPageY,
                     },
                     display: args.display,
-                    screenshots: screenshots,
+                    screenshots: await decodeB64(screenshots),
                     activeWindows: activeWindows,
                     selections: args.selections,
                     width: args.width,

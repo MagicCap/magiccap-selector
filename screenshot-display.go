@@ -5,15 +5,15 @@ package main
 
 import (
 	"github.com/kbinani/screenshot"
+	"github.com/satori/go.uuid"
 	"image/png"
 	"image"
-	"os"
 	"strconv"
-	"fmt"
 	"bytes"
 	"sort"
+	"net/http"
+	"fmt"
 )
-import b64 "encoding/base64"
 
 func main() {
 	n := screenshot.NumActiveDisplays()
@@ -27,21 +27,27 @@ func main() {
 		return all_displays[a].Min.X < all_displays[b].Min.X
 	})
 
-	argsWithoutProg := os.Args[1:]
+	id := fmt.Sprintf("%s", uuid.Must(uuid.NewV4()))
 
-	if len(argsWithoutProg) != 1 {
-		panic("Invalid length")
-	}
+	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
+		queryValues := r.URL.Query()
+		key := queryValues.Get("key")
+		if key != id {
+			panic("Invalid key.")
+		}
+		display_id, _ := strconv.Atoi(queryValues.Get("display"))
 
-	display_id, _ := strconv.Atoi(argsWithoutProg[0])
+		img, err := screenshot.CaptureRect(all_displays[display_id])
+		if err != nil {
+			panic(err)
+		}
+	
+		buf := new(bytes.Buffer)
+		png.Encode(buf, img)
+		
+		w.Write(buf.Bytes())
+	})
 
-	img, err := screenshot.CaptureRect(all_displays[display_id])
-	if err != nil {
-		panic(err)
-	}
-
-	buf := new(bytes.Buffer)
-	png.Encode(buf, img)
-
-	fmt.Printf("%s", b64.StdEncoding.EncodeToString(buf.Bytes()))
+	fmt.Printf("%s", id)
+	http.ListenAndServe("127.0.0.1:63431", nil)
 }

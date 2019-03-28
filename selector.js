@@ -67,7 +67,7 @@ const getInbetweenWindows = electronMouse => {
 
 // Called when the mouse moves.
 document.body.onmousemove = e => {
-    thisClick = require("electron").screen.getCursorScreenPoint();
+    const thisClick = require("electron").screen.getCursorScreenPoint();
     ipcRenderer.send(`${displayInfo.uuid}-event-send`, {
         type: "invalidate-selections",
     });
@@ -104,6 +104,8 @@ const xssProtect = data => {
 
 // Called when the mouse button goes up.
 document.body.onmouseup = async e => {
+    const thisClick = require("electron").screen.getCursorScreenPoint();
+
     if (e.target.matches(".clickable-property")) {
         return;
     }
@@ -137,7 +139,7 @@ document.body.onmouseup = async e => {
     };
 
     if (selectionType === "__cap__") {
-        await ipcRenderer.send("screen-close", {
+        ipcRenderer.send("screen-close", {
             startX: start.x,
             startY: start.y,
             startPageX: start.pageX,
@@ -229,13 +231,33 @@ function invokeButton(buttonId) {
 }
 
 // Sets the display information.
-displayInfo = ipcRenderer.sendSync(`screen-${screenNumber}-load`);
+ipcRenderer.send(`screen-${screenNumber}-load`);
+ipcRenderer.once("load-reply", (_, info) => {
+    displayInfo = info;
 
-// Sets the background image.
-document.body.style.backgroundImage = `url("file://${__dirname}/dimmer.png"), url("data:image/png;base64,${displayInfo.screenshot.toString("base64")}")`;
+    // Sets the background image.
+    document.body.style.backgroundImage = `url("file://${__dirname}/dimmer.png"), url("data:image/png;base64,${displayInfo.screenshot}")`;
+
+    // Handles displaying the buttons.
+    if (displayInfo.buttons && displayInfo.mainDisplay) {
+        let propertyStr = "";
+        for (const buttonId in displayInfo.buttons) {
+            const button = displayInfo.buttons[buttonId];
+            propertyStr += `
+                <a href="javascript:invokeButton(${buttonId})" style="cursor: default;">
+                    <img class="clickable-property${button.active ? " selected" : ""}" src="file://${button.imageLocation}">
+                </a>
+            `;
+        }
+        uploaderProperties.innerHTML += propertyStr;
+    }
+});
 
 // Called when a event is recieved from another screen.
-ipcRenderer.on(`${displayInfo.uuid}-event-recv`, (_, res) => {
+ipcRenderer.on("event-recv", (_, res) => {
+    if (res.display == screenNumber) {
+        return;
+    }
     switch (res.type) {
         case "invalidate-selections": {
             element.style.width = "0px";
@@ -255,15 +277,3 @@ ipcRenderer.on(`${displayInfo.uuid}-event-recv`, (_, res) => {
         }
     }
 });
-
-// Handles displaying the buttons.
-if (displayInfo.buttons && displayInfo.mainDisplay) {
-    for (const buttonId in displayInfo.buttons) {
-        const button = displayInfo.buttons[buttonId];
-        uploaderProperties.innerHTML += `
-            <a href="javascript:invokeButton(${buttonId})" style="cursor: default;">
-                <img class="clickable-property${button.active ? " selected" : ""}" src="file://${button.imageLocation}">
-            </a>
-        `;
-    }
-}
