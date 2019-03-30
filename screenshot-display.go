@@ -13,6 +13,7 @@ import (
 	"sort"
 	"net/http"
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -49,5 +50,5 @@ func main() {
 	})
 
 	fmt.Printf("%s", id)
-	http.ListenAndServe("127.0.0.1:63431", nil)
+	http.ListenAndServe(fmt.Sprintf("127.0.0.1:%s", os.Args[1]), nil)
 }

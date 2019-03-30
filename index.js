@@ -20,7 +20,10 @@ if (platform === "win32") {
 }
 
 // Defines the HTTP server.
-const screenshotServer = spawn(`${__dirname}${path.sep}bin${path.sep}screenshot-display-${fullPlatform}`, {
+const LOWEST_PORT = 63000;
+const HIGHEST_PORT = 63999;
+const port = Math.floor(Math.random() * (+HIGHEST_PORT - +LOWEST_PORT)) + +LOWEST_PORT;
+const screenshotServer = spawn(`${__dirname}${path.sep}bin${path.sep}screenshot-display-${fullPlatform}`, [`${port}`], {
     detached: false,
 });
 let screenshotServerKey;
@@ -141,7 +144,7 @@ module.exports = async buttons => {
     }
 
     const displayPromise = async display => {
-        const data = await get(`http://127.0.0.1:63431/?key=${screenshotServerKey}&display=${display}`).toBuffer();
+        const data = await get(`http://127.0.0.1:${port}/?key=${screenshotServerKey}&display=${display}`).toBuffer();
         return b64.encode(data.body);
     }
 
