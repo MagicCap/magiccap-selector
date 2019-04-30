@@ -43,6 +43,9 @@ const spawnWindows = displays => {
             show: false,
             width: i.bounds.width,
             height: i.bounds.height,
+            webPreferences: {
+                nodeIntegration: false,
+            },
         })
         win.setVisibleOnAllWorkspaces(true)
         win.setPosition(i.bounds.x, i.bounds.y)
