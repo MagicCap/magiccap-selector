@@ -44,7 +44,7 @@ const spawnWindows = displays => {
             width: i.bounds.width,
             height: i.bounds.height,
             webPreferences: {
-                nodeIntegration: false,
+                nodeIntegration: true,
             },
         })
         win.setVisibleOnAllWorkspaces(true)
