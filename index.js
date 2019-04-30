@@ -46,6 +46,8 @@ const spawnWindows = displays => {
             webPreferences: {
                 nodeIntegration: true,
             },
+            backgroundColor: "#000000",
+            transparent: true,
         })
         win.setVisibleOnAllWorkspaces(true)
         win.setPosition(i.bounds.x, i.bounds.y)
@@ -212,10 +214,9 @@ module.exports = async buttons => {
             selectorActive = false;
             const these = screens;
             for (const screen of these) {
-                await screen.setFullScreen(false);
-                await screen.setSimpleFullScreen(false);
+                await screen.setAutoHideMenuBar(false);
                 await screen.setSize(0, 0);
-                await screen.close();
+                screen.close();
             }
             screens = [];
             if (args === undefined) {
