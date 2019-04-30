@@ -8,6 +8,7 @@ go get github.com/lxn/win
 go get golang.org/x/sys/windows
 go get github.com/BurntSushi/xgb
 go get github.com/gen2brain/shm
+go get github.com/satori/go.uuid
 echo 'Building...'
 
 platforms=("windows/amd64" "linux/amd64" "darwin/amd64" "freebsd/amd64")
@@ -19,7 +20,7 @@ do
     GOARCH=${platform_split[1]}
     output_name='./bin/screenshot-display-'$GOOS
     if [ $GOOS = "windows" ]; then
-        output_name+='.exe'
+        output_name='./bin/screenshot-display-win32.exe'
     fi  
 
     env GOOS=$GOOS GOARCH=$GOARCH go build -o $output_name screenshot-display.go

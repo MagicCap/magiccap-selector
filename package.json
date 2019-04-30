@@ -1,6 +1,6 @@
 {
   "name": "magiccap-selector",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "The region selection functionality for MagicCap.",
   "main": "index.js",
   "scripts": {
@@ -15,6 +15,6 @@
     "chainfetch": "1.1.0"
   },
   "devDependencies": {
-    "electron": "4.0.5"
+    "electron": "5.0.0"
   }
 }
