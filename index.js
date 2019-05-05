@@ -63,6 +63,7 @@ const spawnWindows = displays => {
             },
             backgroundColor: "#000000",
             transparent: true,
+            offscreen: true,
         })
         win.setVisibleOnAllWorkspaces(true)
         win.setPosition(i.bounds.x, i.bounds.y)
