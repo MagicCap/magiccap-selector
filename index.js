@@ -8,9 +8,12 @@ const uuidv4 = require('uuid/v4');
 const os = require("os");
 const path = require("path");
 const asyncChildProcess = require("async-child-process");
-const b64 = require("base64-async");
 const { spawn } = require("child_process");
 const { get } = require("chainfetch");
+const express = require("express");
+
+// Defines all of the screenshots.
+let screenshots = [];
 
 // Defines the platform.
 const platform = os.platform();
@@ -19,19 +22,31 @@ if (platform === "win32") {
     fullPlatform += ".exe";
 }
 
-// Defines the HTTP server.
+// Defines the HTTP servers.
 const LOWEST_PORT = 63000;
 const HIGHEST_PORT = 63999;
 const port = Math.floor(Math.random() * (+HIGHEST_PORT - +LOWEST_PORT)) + +LOWEST_PORT;
-const screenshotServer = spawn(`${__dirname}${path.sep}bin${path.sep}screenshot-display-${fullPlatform}`, [`${port}`], {
-    detached: false,
-});
+const screenshotServer = spawn(`${__dirname}${path.sep}bin${path.sep}screenshot-display-${fullPlatform}`, [`${port}`]);
 let screenshotServerKey;
 screenshotServer.stdout.on("data", key => {
     if (!screenshotServerKey) {
-        screenshotServerKey = key;
+        screenshotServerKey = key.toString();
     }
 })
+const freezeServerPort = Math.floor(Math.random() * (+HIGHEST_PORT - +LOWEST_PORT)) + +LOWEST_PORT;
+const freezeServer = express();
+freezeServer.get("/", (req, res) => {
+    const key = req.query.key;
+    if (key !== screenshotServerKey) {
+        res.status(403);
+        res.send("Invalid key.");
+    } else {
+        const display = parseInt(req.query.display);
+        res.contentType("png");
+        res.end(screenshots[display]);
+    }
+});
+freezeServer.listen(freezeServerPort, "127.0.0.1");
 
 // Spawns all browser windows.
 const spawnWindows = displays => {
@@ -101,15 +116,6 @@ const values = item => {
 // Defines if the selector is active.
 let selectorActive = false;
 
-// Decodes all of the base 64.
-const decodeB64 = async shotList => {
-    const promises = [];
-    for (const shot of shotList) {
-        promises.push(b64.decode(shot));
-    }
-    return Promise.all(promises);
-};
-
 // Opens the region selector.
 module.exports = async buttons => {
     if (selectorActive) {
@@ -150,7 +156,7 @@ module.exports = async buttons => {
 
     const displayPromise = async display => {
         const data = await get(`http://127.0.0.1:${port}/?key=${screenshotServerKey}&display=${display}`).toBuffer();
-        return b64.encode(data.body);
+        return data.body;
     }
 
     const promises = [];
@@ -164,7 +170,7 @@ module.exports = async buttons => {
         }
     })();
 
-    let screenshots = await Promise.all(promises);
+    screenshots = await Promise.all(promises);
 
     let screens;
     if (!spawnedWindows) {
@@ -182,7 +188,8 @@ module.exports = async buttons => {
         await ipcMain.once(`screen-${screenNumber}-load`, async() => {
             await screen.webContents.send("load-reply", {
                 mainDisplay: screenNumber == primaryId,
-                screenshot: screenshots[screenNumber],
+                key: screenshotServerKey,
+                port: freezeServerPort,
                 buttons: buttons,
                 displayNumber: screenNumber,
                 uuid: uuid,
@@ -236,7 +243,7 @@ module.exports = async buttons => {
                         pageY: args.endPageY,
                     },
                     display: args.display,
-                    screenshots: await decodeB64(screenshots),
+                    screenshots: screenshots,
                     activeWindows: activeWindows,
                     selections: args.selections,
                     width: args.width,

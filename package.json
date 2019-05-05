@@ -1,6 +1,6 @@
 {
   "name": "magiccap-selector",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "The region selection functionality for MagicCap.",
   "main": "index.js",
   "scripts": {
@@ -9,10 +9,10 @@
   "author": "Jake Gealer & Rhys O'Kane",
   "license": "MPL-2.0",
   "dependencies": {
-    "uuid": "3.3.2",
     "async-child-process": "1.1.1",
-    "base64-async": "2.1.3",
-    "chainfetch": "1.1.0"
+    "chainfetch": "1.1.0",
+    "express": "^4.16.4",
+    "uuid": "3.3.2"
   },
   "devDependencies": {
     "electron": "5.0.0"
