@@ -1,3 +1,5 @@
+**THIS HAS BEEN MERGED INTO THE MAGICCAP APPLICATION!**
+
 # MagicCap Region Selector
 This is the region selector for MagicCap.
 
